@@ -1,0 +1,191 @@
+<html>
+<head>
+    <meta charset="UTF-8"> 
+</head>
+
+<body>
+    <!-- Scripts, so many scripts -->
+    <script src="src/board.js"       ></script>
+    <script src="src/interface.js"   ></script>
+    <script src="src/bezier_curwe.js"></script>
+    <script src="src/animations.js"  ></script>
+    <script src="src/sounds.js"      ></script>
+    <script src="src/drawer.js"      ></script>
+    <script src="src/formations.js"  ></script>
+    <script src="src/tiles.js"       ></script>
+    <script src="src/game.js"        ></script>
+    <script>
+    window.onload = function() {
+        let MENU = 0;
+        let GAME = 1;
+        let LOSE = 2;
+        let WIN  = 3;
+
+        let state = MENU;
+        
+        var c = document.getElementById("canvas");
+        var ctx = c.getContext("2d");
+        var tiles = document.getElementById("tiles");
+        var bg = document.getElementById("bg");
+
+        // Init audio
+        var sounds = new Sounds();
+
+        // Interface
+        var menu_interface = new Interface(ctx);
+        menu_interface.addButton(new Button({x: 450, y:300, width: 300, height: 80}, 'Start', function() {
+            console.log('Start clicked'); 
+
+            // Init tile deck
+            var deck = new TileDeck();
+            deck.init(true);
+
+            // Shuffle deck
+            deck.shuffle();
+            console.log();
+
+            // Initiate game
+            game.init(deck, parseLayout());
+
+            // Change state to GAME
+            state = GAME;
+        }));
+
+        var lose_interface = new Interface(ctx);
+        lose_interface.addWidget(new Box({x: 0, y:0, width: 1200, height: 800}, 'black', 0.8));
+        lose_interface.addWidget(new Text({x: 600, y:400}, 'Game Over', '70px Comic Sans MS'));
+        lose_interface.addWidget(new Text({x: 600, y:500}, 'no more possible moves', '40px Comic Sans MS'));
+        lose_interface.addWidget(new DynamicText({x: 600, y:550}, '40px Comic Sans MS', () => {
+            return 'score: ' + game.board.score;
+        }));
+        lose_interface.addButton(new Button({x: 450, y:600, width: 300, height: 80}, 'Back to menu', function() {
+            console.log('Back to menu pressed.');
+
+            // Change state back to menu
+            state = MENU;
+        }));
+
+        var win_interface = new Interface(ctx);
+        win_interface.addWidget(new Box({x: 0, y:0, width: 1200, height: 800}, 'black', 0.8));
+        win_interface.addWidget(new Text({x: 600, y:400}, 'You win!', '70px Comic Sans MS'));
+        win_interface.addWidget(new DynamicText({x: 500, y:400}, '70px Comic Sans MS', () => {
+            return 'score: ' + game.board.score;
+        }));
+        win_interface.addButton(new Button({x: 450, y:600, width: 300, height: 80}, 'Back to menu', function() {
+            console.log('Back to menu pressed.');
+
+            // Change state back to menu
+            state = MENU;
+        }));
+
+        var game_interface = new Interface(ctx);
+        game_interface.addWidget(new Box({x: 0, y:760, width: 1200, height: 40}, 'black', 0.6));
+        game_interface.addWidget(new DynamicText({x: 600, y: 782}, '20px Comic Sans MS', () => {
+            return 'tiles left: '     + game.board.tiles_left      + '        ' 
+                 + 'possible moves: ' + game.board.available_moves + '        '
+                 + 'score: '          + game.score;
+        }));
+         win_interface.addWidget(new DynamicText({x: 500, y:400}, '70px Comic Sans MS', () => {
+            return 'score: ' + game.board.score;
+        }));
+
+        // Init tile drawer
+        var drawer = new Drawer(c, ctx, bg, tiles, 
+            {width: 85,  height: 117},
+            {width: 65,  height: 90 },
+            {width: 1200, height: 800} );
+
+        // Animation handler
+        var animation_manager = new AnimationManager(drawer);
+
+        // Create game
+        let game = new Game(drawer, sounds, animation_manager);
+
+        // Mouse event listener
+        c.addEventListener('click', function(evt) {
+            var mousePos = getMousePos(c, evt);
+
+            switch (state) {
+                case MENU:
+                    menu_interface.reactClick(mousePos.x, mousePos.y);
+                    menu_interface.draw();
+                    break;
+                case GAME:
+                    game.reactClick(mousePos.x, mousePos.y);
+                    game.draw();
+
+                    if (game.no_more_moves && !game.no_more_tiles) { state = LOSE;  console.log('LOST'); }
+                    else if (game.no_more_moves)                   { state = WIN;   console.log('WON'); }
+
+                    break;
+                case LOSE:
+                    lose_interface.reactClick(mousePos.x, mousePos.y);
+                    lose_interface.draw();
+                    break;
+                case WIN:
+                    win_interface.reactClick(mousePos.x, mousePos.y);
+                    win_interface.draw();
+                    break;
+            }
+        }, false);
+
+        // Draw loop
+        function drawLoop() {
+            drawer.clear();
+
+            switch (state) {
+                case MENU:
+                    //console.log('Drawing menu');
+                    menu_interface.draw();
+                    break;
+                case GAME:
+                    //console.log('Drawing game');
+                    game.draw();
+                    game_interface.draw();
+                    animation_manager.refresh();
+                    break;
+                case LOSE:
+                    //console.log('Drawing lose');
+                    game.draw();
+                    lose_interface.draw();
+                    break;
+                case WIN:
+                    //console.log('Drawing win');
+                    game.draw();
+                    win_interface.draw();
+                    break;
+            }
+        }
+        setInterval(drawLoop, 40);
+        
+    }
+
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: evt.clientX - rect.left,
+          y: evt.clientY - rect.top
+        };
+      }
+    </script>
+
+    <!-- Main body of the page -->
+    <img id="tiles" width="0" height="0" src="graphics/mahjong_tiles.png">
+    <img id="bg" width="0" heigh="0" src="graphics/mahjong_bg.png">
+    <canvas id="canvas" width="1200" height="800" style="border:2px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.
+    </canvas>
+    
+    <!-- Centering canvas both vertically and horizontally -->
+    <style> 
+    #canvas {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 1200px;
+        height: 800px;
+        margin: -400px 0 0 -600px;
+    }
+    </style>
+
+</body>
+</html>
