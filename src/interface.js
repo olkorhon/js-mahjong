@@ -41,7 +41,7 @@ function Button(box, label, onClick) {
 
     this.draw = function(context) {
         if (!self.gradient) {
-            self.gradient = context.createLinearGradient(0, 0, 1200, 800);
+            self.gradient = context.createLinearGradient(self.box.x - 30, self.box.y - 40, self.box.x + self.box.width + 30, self.box.y + self.box.height + 40);
             self.gradient.addColorStop(0, '#E0BA7E');
             self.gradient.addColorStop(1, 'white');
         }

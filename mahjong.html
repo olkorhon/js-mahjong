@@ -56,7 +56,7 @@
         lose_interface.addWidget(new Text({x: 600, y:400}, 'Game Over', '70px Comic Sans MS'));
         lose_interface.addWidget(new Text({x: 600, y:500}, 'no more possible moves', '40px Comic Sans MS'));
         lose_interface.addWidget(new DynamicText({x: 600, y:550}, '40px Comic Sans MS', () => {
-            return 'score: ' + game.board.score;
+            return 'score: ' + game.score;
         }));
         lose_interface.addButton(new Button({x: 450, y:600, width: 300, height: 80}, 'Back to menu', function() {
             console.log('Back to menu pressed.');
@@ -69,7 +69,7 @@
         win_interface.addWidget(new Box({x: 0, y:0, width: 1200, height: 800}, 'black', 0.8));
         win_interface.addWidget(new Text({x: 600, y:400}, 'You win!', '70px Comic Sans MS'));
         win_interface.addWidget(new DynamicText({x: 500, y:400}, '70px Comic Sans MS', () => {
-            return 'score: ' + game.board.score;
+            return 'score: ' + game.score;
         }));
         win_interface.addButton(new Button({x: 450, y:600, width: 300, height: 80}, 'Back to menu', function() {
             console.log('Back to menu pressed.');
@@ -84,9 +84,6 @@
             return 'tiles left: '     + game.board.tiles_left      + '        ' 
                  + 'possible moves: ' + game.board.available_moves + '        '
                  + 'score: '          + game.score;
-        }));
-         win_interface.addWidget(new DynamicText({x: 500, y:400}, '70px Comic Sans MS', () => {
-            return 'score: ' + game.board.score;
         }));
 
         // Init tile drawer
